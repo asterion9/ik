@@ -41,8 +41,8 @@ public class IkTester extends Application {
 					return;
 				}
 
-				double x = Math.cos(t / 500d * Math.PI * 2) * 240;
-				double y = Math.sin(t / 500d * Math.PI * 2) * 240;
+				double x = Math.cos(t / 500d * Math.PI * 2) * 249;
+				double y = Math.sin(t / 500d * Math.PI * 2) * 51;
 
 				s1.moveIk2Seg(x, y);
 				t++;
@@ -51,7 +51,7 @@ public class IkTester extends Application {
 
 				draw(graphic, s1);
 				graphic.setFill(Color.RED);
-				double x0 = graphic.getCanvas().getWidth() / 2, y0 = graphic.getCanvas().getHeight() / 2;
+				double x0 = graphic.getCanvas().getWidth() / 2-2.5, y0 = graphic.getCanvas().getHeight() / 2-2.5;
 				graphic.fillOval(x + x0, y + y0, 5, 5);
 				nextStep += 10_000_000;  // 10ms
 			}
@@ -132,8 +132,8 @@ public class IkTester extends Application {
 				throw new IllegalArgumentException("position is too close");
 			}
 
-			this.angle = - Math.acos(x / (Math.pow(squareLength, 0.5))) +
-					Math.asin((l1 * l1 + squareLength - l2 * l2) / (2 * l1 * Math.pow(squareLength, 0.5)));
+			this.angle = (y > 0 ? 1 : -1) * Math.acos(x / (Math.pow(squareLength, 0.5))) +
+					Math.acos((l1 * l1 + squareLength - l2 * l2) / (2 * l1 * Math.pow(squareLength, 0.5)));
 			this.next.angle = - Math.acos((squareLength - l1 * l1 - l2 * l2) / (2 * l1 * l2));
 		}
 
