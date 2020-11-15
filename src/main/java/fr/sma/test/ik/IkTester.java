@@ -8,8 +8,7 @@ import javafx.stage.Stage;
 public class IkTester extends Application {
 
 	public void start(Stage primaryStage) {
-		final Segment2d s1 = new Segment2d(150, 45,
-				new Segment2d(100, 0));
+		final TwoLegPlanar arm = new TwoLegPlanar(150, 100, 45, 0);
 
 		final Scene2dController scene2dController = new Scene2dController(640, 640);
 
@@ -26,10 +25,10 @@ public class IkTester extends Application {
 				long t = System.currentTimeMillis() - t0;
 				Vector2d target = ellipse.getPoint((t / 2000d) % 1);
 
-				s1.moveIk2Seg(target);
+				arm.moveIk2Seg(target);
 				//s1.moveFk(new ArrayDeque<>(List.of(Math.PI/300)));
 
-				scene2dController.draw(s1, target);
+				scene2dController.draw(arm, target);
 			}
 		};
 		at.start();

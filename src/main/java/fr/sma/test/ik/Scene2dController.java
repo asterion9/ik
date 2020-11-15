@@ -22,14 +22,14 @@ public class Scene2dController {
 		return scene;
 	}
 
-	public void draw(Segment2d s1, Vector2d target) {
+	public void draw(TwoLegPlanar s1, Vector2d target) {
 		GraphicsContext g = canvas.getGraphicsContext2D();
 		final double cw = g.getCanvas().getWidth();
 		final double ch = g.getCanvas().getHeight();
 		g.clearRect(0, 0, cw, ch);
 
 		drawGrid(g, 6);
-		drawSegments(g, s1);
+		drawArm(g, s1);
 		drawTarget(g, target);
 	}
 
@@ -39,19 +39,18 @@ public class Scene2dController {
 		graphic.fillOval(target.getX() + x0, target.getY() + y0, 5, 5);
 	}
 
-	private void drawSegments(GraphicsContext g, Segment2d s1) {
+	private void drawArm(GraphicsContext g, TwoLegPlanar arm) {
 		g.setStroke(Color.gray(0.9));
 		g.setLineWidth(5);
 		double x = g.getCanvas().getWidth() / 2, y = g.getCanvas().getHeight() / 2;
-		double angle = 0;
-		for (Segment2d cur = s1; cur != null; cur = cur.getNext()) {
-			angle += cur.getAngle();
-			double x1 = x + cur.getLen() * Math.cos(angle);
-			double y1 = y + cur.getLen() * Math.sin(angle);
-			g.strokeLine(x, y, x1, y1);
-			x = x1;
-			y = y1;
-		}
+		double angle = arm.getAngle1();
+		double x1 = x + arm.getL1() * Math.cos(angle);
+		double y1 = y + arm.getL1() * Math.sin(angle);
+		g.strokeLine(x, y, x1, y1);
+		angle += arm.getAngle2();
+		double x2 = x1 + arm.getL2() * Math.cos(angle);
+		double y2 = y1 + arm.getL2() * Math.sin(angle);
+		g.strokeLine(x1, y1, x2, y2);
 	}
 
 	private void drawGrid(GraphicsContext g, final int gridDepth) {
