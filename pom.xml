@@ -29,7 +29,7 @@
 				<artifactId>javafx-maven-plugin</artifactId>
 				<version>0.0.2</version>
 				<configuration>
-					<mainClass>fr.sma.test.ik.IkTester</mainClass>
+					<mainClass>fr.sma.test.ik.ThreedTester</mainClass>
 				</configuration>
 			</plugin>
 		</plugins>

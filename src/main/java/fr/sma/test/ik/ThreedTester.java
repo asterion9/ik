@@ -12,7 +12,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class IkTester extends Application {
+public class ThreedTester extends Application {
 
 	public void start(Stage primaryStage) {
 		final TwoLegRotating arm = new TwoLegRotating(150, 100, 0, 0, 0);
