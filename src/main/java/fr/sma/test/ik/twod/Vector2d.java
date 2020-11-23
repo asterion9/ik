@@ -1,4 +1,4 @@
-package fr.sma.test.ik;
+package fr.sma.test.ik.twod;
 
 public class Vector2d {
 	private double x;

@@ -1,36 +1,50 @@
 package fr.sma.test.ik;
 
-import fr.sma.test.ik.sequence.EllipticSequence2d;
+import fr.sma.test.ik.threed.Scene3dController;
+import fr.sma.test.ik.threed.TwoLegRotating;
+import fr.sma.test.ik.threed.Vector3d;
+import fr.sma.test.ik.threed.sequence.SphericalSequence;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicReference;
+
 public class IkTester extends Application {
 
 	public void start(Stage primaryStage) {
-		final TwoLegPlanar arm = new TwoLegPlanar(150, 100, 45, 0);
+		final TwoLegRotating arm = new TwoLegRotating(150, 100, 0, 0, 0);
+		final AtomicReference<Vector3d> target = new AtomicReference<>(new Vector3d(0, 0, 0));
+		final Scene3dController scene3dController = new Scene3dController(1200, 800);
 
-		final Scene2dController scene2dController = new Scene2dController(640, 640);
-
-		primaryStage.setScene(scene2dController.getScene());
+		primaryStage.setScene(scene3dController.getScene());
 		primaryStage.show();
 
 		AnimationTimer at = new AnimationTimer() {
-			private final long t0 = System.currentTimeMillis();
-
-			private final EllipticSequence2d ellipse = new EllipticSequence2d(150, 0, 75, 25);
 
 			@Override
 			public void handle(long now) {
-				long t = System.currentTimeMillis() - t0;
-				Vector2d target = ellipse.getPoint((t / 2000d) % 1);
-
-				arm.moveIk2Seg(target);
-				//s1.moveFk(new ArrayDeque<>(List.of(Math.PI/300)));
-
-				scene2dController.draw(arm, target);
+				scene3dController.draw(target.get(), arm);
 			}
 		};
 		at.start();
+
+		final long t0 = System.currentTimeMillis();
+		final SphericalSequence sphereSeq = new SphericalSequence(0, 0, 200);
+
+		new Timer(true).scheduleAtFixedRate(new TimerTask() {
+			@Override
+			public void run() {
+				double t = ((System.currentTimeMillis() - t0) / 10000d) % 1;
+				Vector3d nextTarget = sphereSeq.getPoint(t);
+				synchronized (arm) {
+					arm.moveIk(nextTarget);
+					target.set(nextTarget);
+					//arm.moveFk(t * Math.PI * 2, t * Math.PI * 2, /*t * Math.PI * 2*/0);
+				}
+			}
+		}, 0, 10);
 	}
 }

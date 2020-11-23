@@ -1,4 +1,4 @@
-package fr.sma.test.ik;
+package fr.sma.test.ik.twod;
 
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;

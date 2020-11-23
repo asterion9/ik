@@ -1,6 +1,6 @@
-package fr.sma.test.ik;
+package fr.sma.test.ik.twod;
 
-class TwoLegPlanar {
+public class TwoLegPlanar {
 	private double l1, l2;
 	private double angle1, angle2;
 
