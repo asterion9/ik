@@ -1,5 +1,7 @@
 package fr.sma.test.ik.twod;
 
+import fr.sma.test.ik.threed.sequence.Sequence3d;
+import fr.sma.test.ik.twod.sequence.Sequence2d;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -22,15 +24,29 @@ public class Scene2dController {
 		return scene;
 	}
 
-	public void draw(TwoLegPlanar s1, Vector2d target) {
+	public void draw(TwoLegPlanar s1, Vector2d target, Sequence2d sequence) {
 		GraphicsContext g = canvas.getGraphicsContext2D();
 		final double cw = g.getCanvas().getWidth();
 		final double ch = g.getCanvas().getHeight();
 		g.clearRect(0, 0, cw, ch);
 
 		drawGrid(g, 6);
+		drawSequence(g, sequence);
 		drawArm(g, s1);
 		drawTarget(g, target);
+	}
+
+	private void drawSequence(GraphicsContext graphic, Sequence2d sequence2d) {
+		final double step = 1/20d;
+		Vector2d prev = sequence2d.getPoint(0);
+		graphic.setLineWidth(1);
+		graphic.setStroke(Color.YELLOW);
+		double x0 = graphic.getCanvas().getWidth() / 2, y0 = graphic.getCanvas().getHeight() / 2;
+		for(double i=step; i<=1; i += step) {
+			Vector2d cur = sequence2d.getPoint(i);
+			graphic.strokeLine(prev.getX()+x0, prev.getY()+y0, cur.getX()+x0, cur.getY()+y0);
+			prev = cur;
+		}
 	}
 
 	private void drawTarget(GraphicsContext graphic, Vector2d target) {

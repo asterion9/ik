@@ -1,16 +1,28 @@
 package fr.sma.test.ik.threed;
 
+import fr.sma.test.ik.threed.sequence.Sequence3d;
+import fr.sma.test.ik.twod.Vector2d;
 import fr.sma.test.ik.utils.CameraManager;
+import javafx.scene.AmbientLight;
 import javafx.scene.Group;
 import javafx.scene.PerspectiveCamera;
+import javafx.scene.PointLight;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Translate;
+import org.fxyz3d.geometry.Point3D;
+import org.fxyz3d.shapes.composites.PolyLine3D;
+
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
+import java.util.stream.Stream;
 
 public class Scene3dController {
 	private final Scene scene;
@@ -23,6 +35,8 @@ public class Scene3dController {
 	private final Box arm1;
 	private final Box arm2;
 
+	private PolyLine3D trajectory;
+
 	public Scene3dController(double width, double height) {
 		// define base elements
 		this.mainGroup = new Group();
@@ -33,6 +47,11 @@ public class Scene3dController {
 		mainGroup.getChildren().add(camera);
 		this.cameraManager = new CameraManager(camera, pane, mainGroup);
 
+		// define lights
+		AmbientLight al = new AmbientLight(Color.gray(0.5));
+		PointLight pl = new PointLight(Color.WHITE);
+		pl.setTranslateZ(-500);
+		mainGroup.getChildren().addAll(al, pl);
 
 		// define target
 		this.targetSphere = new Sphere(3, 10);
@@ -76,6 +95,18 @@ public class Scene3dController {
 
 	public Scene getScene() {
 		return scene;
+	}
+
+	public void drawTrajectory(Sequence3d sequence3d) {
+		final double step = 2/sequence3d.length();
+		final List<Point3D> points = DoubleStream.iterate(0, d -> d < 1, d -> d + step)
+				.mapToObj(sequence3d::getPoint)
+				.map(v3d -> new Point3D(v3d.getX(), v3d.getY(), v3d.getZ()))
+				.collect(Collectors.toList());
+
+		this.mainGroup.getChildren().remove(this.trajectory);
+		this.trajectory = new PolyLine3D(points, 1.5f, Color.YELLOW);
+		this.mainGroup.getChildren().add(this.trajectory);
 	}
 
 	public void draw(Vector3d target, TwoLegRotating arm) {

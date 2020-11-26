@@ -15,7 +15,7 @@ public class SphericalSequence extends Sequence3d {
 
 	@Override
 	public Vector3d getPoint(double t) {
-		double a = t * Math.PI * 2, b = Math.cos(t * Math.PI * 8) * Math.PI / 4;
+		double a = t * Math.PI * 2, b = t * Math.PI * 4;
 		return new Vector3d(
 				r * Math.sin(a) * Math.cos(b),
 				r * Math.sin(a) * Math.sin(b),

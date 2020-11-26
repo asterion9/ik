@@ -33,6 +33,7 @@ public class ThreedTester extends Application {
 
 		final long t0 = System.currentTimeMillis();
 		final SphericalSequence sphereSeq = new SphericalSequence(0, 0, 200);
+		scene3dController.drawTrajectory(sphereSeq);
 
 		new Timer(true).scheduleAtFixedRate(new TimerTask() {
 			@Override
