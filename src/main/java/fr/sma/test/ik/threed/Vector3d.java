@@ -50,4 +50,14 @@ public class Vector3d {
 	public void setZ(double z) {
 		this.z = z;
 	}
+
+	public Vector3d rotateAroundY(double yAngle, Vector3d rotationCenter) {
+		double cosA = Math.cos(yAngle);
+		double sinA = Math.sin(yAngle);
+		return new Vector3d(
+				rotationCenter.getX() + cosA * (x- rotationCenter.getX()) + sinA * (z- rotationCenter.getZ()),
+				y,
+				rotationCenter.getZ() + -sinA * (x - rotationCenter.getX()) + cosA * (z - rotationCenter.getZ())
+		);
+	}
 }

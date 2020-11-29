@@ -3,7 +3,7 @@ package fr.sma.test.ik;
 import fr.sma.test.ik.threed.Scene3dController;
 import fr.sma.test.ik.threed.TwoLegRotating;
 import fr.sma.test.ik.threed.Vector3d;
-import fr.sma.test.ik.threed.sequence.SphericalSequence;
+import fr.sma.test.ik.threed.sequence.WalkingSequence3d;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -22,27 +22,30 @@ public class ThreedTester extends Application {
 		primaryStage.setScene(scene3dController.getScene());
 		primaryStage.show();
 
+		final WalkingSequence3d walk = new WalkingSequence3d(100, -50, -100, -Math.PI/4, 50, 200);
+
 		AnimationTimer at = new AnimationTimer() {
 
 			@Override
 			public void handle(long now) {
 				scene3dController.draw(target.get(), arm);
+				scene3dController.drawTrajectory(walk);
 			}
 		};
 		at.start();
-
 		final long t0 = System.currentTimeMillis();
-		final SphericalSequence sphereSeq = new SphericalSequence(0, 0, 200);
-		scene3dController.drawTrajectory(sphereSeq);
 
 		new Timer(true).scheduleAtFixedRate(new TimerTask() {
 			@Override
 			public void run() {
-				double t = ((System.currentTimeMillis() - t0) / 10000d) % 1;
-				Vector3d nextTarget = sphereSeq.getPoint(t);
+				double t = ((System.currentTimeMillis() - t0) / 5000d) % 1;
+				double tSeq = ((System.currentTimeMillis() - t0) / 20000d) % 1;
+				Vector3d nextTarget = walk.getPoint(t);
 				synchronized (arm) {
+					walk.setyAngle(-Math.PI/4 - (Math.PI/4) * Math.cos(2 * Math.PI * tSeq));
 					arm.moveIk(nextTarget);
 					target.set(nextTarget);
+
 					//arm.moveFk(t * Math.PI * 2, t * Math.PI * 2, /*t * Math.PI * 2*/0);
 				}
 			}
