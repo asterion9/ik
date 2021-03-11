@@ -1,7 +1,6 @@
 package fr.sma.test.ik.threed;
 
 import fr.sma.test.ik.threed.sequence.Sequence3d;
-import fr.sma.test.ik.twod.Vector2d;
 import fr.sma.test.ik.utils.CameraManager;
 import javafx.scene.AmbientLight;
 import javafx.scene.Group;
@@ -12,7 +11,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
-import javafx.scene.shape.Line;
 import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Translate;
@@ -22,7 +20,6 @@ import org.fxyz3d.shapes.composites.PolyLine3D;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
-import java.util.stream.Stream;
 
 public class Scene3dController {
 	private final Scene scene;
@@ -32,6 +29,7 @@ public class Scene3dController {
 	private final Sphere targetSphere;
 	private final Rotate angleH, angleV, angle2;
 	private final Group baseVectors;
+	private final Box arm0;
 	private final Box arm1;
 	private final Box arm2;
 
@@ -73,19 +71,24 @@ public class Scene3dController {
 		mainGroup.getChildren().add(baseVectors);
 
 		// define arms
-		arm1 = new Box(150, 5, 5);
-		this.angleV = new Rotate(0, Rotate.Z_AXIS);
+		arm0 = new Box(25, 5, 5);
 		this.angleH = new Rotate(0, Rotate.Y_AXIS);
+		final Translate translateArm0Size = new Translate();
+		translateArm0Size.xProperty().bind(arm0.widthProperty().divide(2));
+		arm0.getTransforms().addAll(angleH, translateArm0Size);
+		arm1 = new Box(125, 5, 5);
+		this.angleV = new Rotate(0, Rotate.Z_AXIS);
 		final Translate translateArm1Size = new Translate();
 		translateArm1Size.xProperty().bind(arm1.widthProperty().divide(2));
-		arm1.getTransforms().addAll(angleH, angleV, translateArm1Size);
+		arm1.getTransforms().addAll(arm0.getTransforms());
+		arm1.getTransforms().addAll(translateArm0Size, angleV, translateArm1Size);
 		arm2 = new Box(100, 4, 4);
 		this.angle2 = new Rotate(0, Rotate.Z_AXIS);
 		final Translate translateArm2Size = new Translate();
 		translateArm2Size.xProperty().bind(arm2.widthProperty().divide(2));
 		arm2.getTransforms().addAll(arm1.getTransforms());
 		arm2.getTransforms().addAll(translateArm1Size, angle2, translateArm2Size);
-		mainGroup.getChildren().addAll(arm1, arm2);
+		mainGroup.getChildren().addAll(arm0, arm1, arm2);
 
 		// build scene
 		this.scene = new Scene(pane, width, height, true);
@@ -105,13 +108,20 @@ public class Scene3dController {
 				.collect(Collectors.toList());
 
 		this.mainGroup.getChildren().remove(this.trajectory);
-		this.trajectory = new PolyLine3D(points, 1.5f, Color.YELLOW);
+		this.trajectory = new PolyLine3D(points, 1.5f, Color.YELLOW, PolyLine3D.LineType.TRIANGLE);
 		this.mainGroup.getChildren().add(this.trajectory);
 	}
 
-	public void draw(Vector3d target, TwoLegRotating arm) {
+	public void draw(Vector3d target, ThreeLegRotating arm) {
+		resizeArm(arm);
 		drawArm(arm);
 		drawTarget(target);
+	}
+
+	private void resizeArm(ThreeLegRotating arm) {
+		arm0.widthProperty().set(arm.getL0());
+		arm1.widthProperty().set(arm.getL1());
+		arm2.widthProperty().set(arm.getL2());
 	}
 
 	private void drawTarget(Vector3d target) {
@@ -120,7 +130,7 @@ public class Scene3dController {
 		this.targetSphere.setTranslateZ(target.getZ());
 	}
 
-	private void drawArm(TwoLegRotating arm) {
+	private void drawArm(ThreeLegRotating arm) {
 		this.angleH.angleProperty().set(360 * arm.getAngle1H() / (2 * Math.PI));
 		this.angleV.angleProperty().set(360 * arm.getAngle1V() / (2 * Math.PI));
 		this.angle2.angleProperty().set(360 * arm.getAngle2() / (2 * Math.PI));

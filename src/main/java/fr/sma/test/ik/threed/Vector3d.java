@@ -60,4 +60,33 @@ public class Vector3d {
 				rotationCenter.getZ() + -sinA * (x - rotationCenter.getX()) + cosA * (z - rotationCenter.getZ())
 		);
 	}
+
+	public Vector3d multiply(double scalar) {
+		return new Vector3d(x * scalar, y * scalar, z * scalar);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof Vector3d)) return false;
+
+		Vector3d vector3d = (Vector3d) o;
+
+		if (Double.compare(vector3d.x, x) != 0) return false;
+		if (Double.compare(vector3d.y, y) != 0) return false;
+		return Double.compare(vector3d.z, z) == 0;
+	}
+
+	@Override
+	public int hashCode() {
+		int result;
+		long temp;
+		temp = Double.doubleToLongBits(x);
+		result = (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(y);
+		result = 31 * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(z);
+		result = 31 * result + (int) (temp ^ (temp >>> 32));
+		return result;
+	}
 }
