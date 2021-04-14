@@ -7,7 +7,7 @@
 controller = nil
 
 function Update(I)
-    if (controller == nil) then
+    if controller == nil then
         controller = Controller.newAmplitudeController(I, buildArms(I))
     end
     controller:move(I)
@@ -65,7 +65,7 @@ function buildArms(I)
             { gaitCenter = Vector3(-61.5, -37, -60), segments = leftLegSegments},  -- bottom left
         })]]
     -- ancient turret
-    local segment0Right = { len = Vector3(0, 0, 4), spinOffset = 0, spinDirection = -1 }
+    --[[ local segment0Right = { len = Vector3(0, 0, 4), spinOffset = 0, spinDirection = -1 }
     local segment0Left = { len = Vector3(0, 0, 4), spinOffset = 180, spinDirection = -1 }
     local segment1 = { len = Vector3(0, 0, 5), spinOffset = 0, spinDirection = 1 }
     local segment2 = { len = Vector3(0, 0, 5.5), spinOffset = 0, spinDirection = -1 }
@@ -77,9 +77,38 @@ function buildArms(I)
                 { gaitCenter = Vector3(-7, -3, 7), segments = { segment0Left, segment1, segment2 } }, -- top left
                 { gaitCenter = Vector3(-10, -3, 0), segments = { segment0Left, segment1, segment2 } }, -- middle left
                 { gaitCenter = Vector3(-7, -3, -7), segments = { segment0Left, segment1, segment2 } }  -- bottom left
-            })
-    --return PrefabLegBuilder.buildLegs(I, {{ segments = { gaitCenter = Vector3(0, -2, 10), segment0Right, segment1, segment2 }}})
+            }) ]]
 
+    --Bishop test 6 legs
+    local segment0Right = { len = Vector3(0, 0, 4), spinOffset = 0, spinDirection = -1 }
+    local segment0Left = { len = Vector3(0, 0, 4), spinOffset = 180, spinDirection = -1 }
+    local segment1 = { len = Vector3(0, 0, 5), spinOffset = 0, spinDirection = -1 }
+    local segment2 = { len = Vector3(0, 0, 5.5), spinOffset = 0, spinDirection = -1 }
+    return PrefabLegBuilder.buildLegs(I,
+            {
+                { gaitCenter = Vector3(7, -3, -5), segments = { segment0Right, segment1, segment2 } }, -- bottom right
+                { gaitCenter = Vector3(10, -3, 0), segments = { segment0Right, segment1, segment2 } }, -- middle right
+                { gaitCenter = Vector3(7, -3, 5), segments = { segment0Right, segment1, segment2 } }, -- top right
+                { gaitCenter = Vector3(-7, -3, 5), segments = { segment0Left, segment1, segment2 } }, -- top left
+                { gaitCenter = Vector3(-10, -3, 0), segments = { segment0Left, segment1, segment2 } }, -- middle left
+                { gaitCenter = Vector3(-7, -3, -5), segments = { segment0Left, segment1, segment2 } }  -- bottom left
+            })
+
+
+    -- small runner
+    --[[    local segment0Right = { len = Vector3(0, 0, 9), spinOffset = 0, spinDirection = 1 }
+        local segment0Left = { len = Vector3(0, 0, 9), spinOffset = 180, spinDirection = 1 }
+        local segment1 = { len = Vector3(0, 0, 9), spinOffset = 0, spinDirection = -1 }
+        local segment2 = { len = Vector3(0, 0, 9), spinOffset = 0, spinDirection = -1 }
+        return PrefabLegBuilder.buildLegs(I,
+                {
+                    { gaitCenter = Vector3(12, -4, -12), segments = { segment0Right, segment1, segment2 } }, -- bottom right
+                    { gaitCenter = Vector3(18, -4, 0), segments = { segment0Right, segment1, segment2 } }, -- middle right
+                    { gaitCenter = Vector3(12, -4, 12), segments = { segment0Right, segment1, segment2 } }, -- top right
+                    { gaitCenter = Vector3(-12, -4, 12), segments = { segment0Left, segment1, segment2 } }, -- top left
+                    { gaitCenter = Vector3(-18, -4, 0), segments = { segment0Left, segment1, segment2 } }, -- middle left
+                    { gaitCenter = Vector3(-12, -4, -12), segments = { segment0Left, segment1, segment2 } }  -- bottom left
+                })]]
 end
 
 function rotateAround(base, yAngle, rotationCenter)
@@ -92,7 +121,7 @@ function rotateAround(base, yAngle, rotationCenter)
     )
 end
 
-Adjuster = {
+--[[ Adjuster = {
     new = function(I, legs)
         return {
             comAdjust = Vector3.zero,
@@ -136,48 +165,61 @@ Adjuster = {
             end
         }
     end
-}
+} ]]
 
 Controller = {
     buildLegsGaits = function(I, legs)
         local legGaits = {}
         for id, leg in pairs(legs) do
             legGaits[leg] = {
-                Walking = Gait.Walking.autoconfig(I, leg),
+                Walking = Gait.Walking.autoconfig(I, leg, -math.pi / 2),
+                Strafing = Gait.Walking.autoconfig(I, leg, 0),
                 Turning = Gait.Turning.autoconfig(I, leg),
                 Resting = Gait.Resting.autoconfig(I, leg)
             }
         end
         return legGaits
     end,
-    readInput = function(I, o)
-        o = o or {}
-        o.turnDirection = I:GetInput(0, 0) - I:GetInput(0, 1)
-        o.drive = I:GetDrive(0)
-        return o
-    end,
-    calculateTarget = function(leg, gaits, curStep, drive, turn)
-        local wTarget
-        local tTarget
+    calculateTarget = function(leg, gaits, curStep, forward, yaw, strafe)
+        local fTarget
+        local sTarget
+        local yTarget
         local rTarget = gaits['Resting'].getPoint((curStep + leg.phase) % 1)
-        local wRatio = math.abs(drive)
-        local tRatio = math.abs(turn)
-        local wDirection = drive / math.abs(drive)
-        local tDirection = turn / math.abs(turn)
-        if (wRatio > 0.01) then
-            wTarget = (wRatio * gaits['Walking'].getPoint((wDirection * (curStep + leg.phase) % 1)) + (1 - wRatio) * rTarget)
+        local fRatio = math.abs(forward)
+        local sRatio = math.abs(strafe)
+        local yRatio = math.abs(yaw)
+        local fDirection = Mathf.Sign(forward)
+        local sDirection = Mathf.Sign(strafe)
+        local yDirection = Mathf.Sign(yaw)
+        if (fRatio > 0.01) then
+            fTarget = (fRatio * gaits['Walking'].getPoint((fDirection * (curStep + leg.phase) % 1)) + (1 - fRatio) * rTarget)
         end
-        if (tRatio > 0.01) then
-            tTarget = (tRatio * gaits['Turning'].getPoint((tDirection * (curStep + leg.phase) % 1)) + (1 - tRatio) * rTarget)
+        if (sRatio > 0.01) then
+            sTarget = (sRatio * gaits['Strafing'].getPoint((sDirection * (curStep + leg.phase) % 1)) + (1 - sRatio) * rTarget)
         end
+        if (yRatio > 0.01) then
+            yTarget = (yRatio * gaits['Turning'].getPoint((yDirection * (curStep + leg.phase) % 1)) + (1 - yRatio) * rTarget)
+        end
+
+        local wTarget = nil
+        if (fTarget ~= nil) then
+            if (sTarget ~= nil) then
+                wTarget = fTarget + sTarget - leg.gaitCenter
+            else
+                wTarget = fTarget
+            end
+        elseif sTarget ~= nil then
+            wTarget = sTarget
+        end
+
         if (wTarget ~= nil) then
-            if (tTarget ~= nil) then
-                return (wTarget + tTarget) / 2
+            if (yTarget ~= nil) then
+                return (wTarget + yTarget) / 2
             else
                 return wTarget
             end
-        elseif tTarget ~= nil then
-            return tTarget
+        elseif yTarget ~= nil then
+            return yTarget
         else
             return rTarget
         end
@@ -186,38 +228,133 @@ Controller = {
         local legGaits = Controller.buildLegsGaits(I, legs)
         return {
             legGaits = legGaits,
-            cps = 1.5, -- cycles per second
-            comAdjuster = Adjuster.new(I, legs),
+            cps = 1, -- cycles per second
+            --comAdjuster = Adjuster.new(I, legs),
             lastTime = I:GetGameTime(),
             curTurn = 0,
+            commandReader = InputReader.new(I),
             move = function(self, I)
                 local curTime = I:GetGameTime()
                 local curStep = (curTime * self.cps) % 1
-                local inputs = Controller.readInput(I)
-                if inputs.turnDirection == 1 and self.curTurn < 1 then
-                    self.curTurn = self.curTurn + 0.025
-                end
-                if inputs.turnDirection == -1 and self.curTurn > -1 then
-                    self.curTurn = self.curTurn - 0.025
-                end
-                if inputs.turnDirection == 0 and math.abs(self.curTurn) > 0.0005 then
-                    --self.curTurn = self.curTurn - 0.025 * (self.curTurn/math.abs(self.curTurn))
-                    self.curTurn = self.curTurn * (1-0.025/math.abs(self.curTurn))
-                end
-                I:Log(string.format('drive=%f, turn=%f', inputs.drive, self.curTurn))
+                local inputs = self.commandReader:getCommands(I)
+                I:Log(string.format('forward=%f, yaw=%f, strafe=%f', inputs.forward, inputs.yaw, inputs.strafe))
                 local legTargets = {}
                 for leg, gaits in pairs(self.legGaits) do
-                    local target = Controller.calculateTarget(leg, gaits, curStep, inputs.drive, self.curTurn)
+                    local target = Controller.calculateTarget(leg, gaits, curStep, inputs.forward, inputs.yaw, inputs.strafe)
                     legTargets[leg] = target
                 end
-                self.comAdjuster:calculateLegOffsets(I, legTargets, curTime - self.lastTime)
+                --self.comAdjuster:calculateLegOffsets(I, legTargets, curTime - self.lastTime)
                 for leg, target in pairs(legTargets) do
                     --leg:moveLeg(I, target + self.comAdjuster:getForLeg(leg), curTime)
                     leg:moveLeg(I, target, curTime)
                 end
                 self.lastTime = curTime
+            end,
+            checkIntegrity = function(self, I)
+                local subConstructs = I:GetAllSubConstructs()
+                local scIndex = {}
+                for i = 1, #subConstructs do
+                    scIndex[subConstructs[i]] = true
+                end
+                for leg, gaits in pairs(self.legGaits) do
+                    if not scIndex[leg.segments[1].spinId] then
+                        return false
+                    end
+                end
+                return true
             end
         }
+    end
+}
+
+Smoother = {
+    new = function()
+        return {
+            target = 0,
+            speed = 0.05,
+            value = 0,
+            update = function(self, val)
+                self.target = val
+                return self
+            end,
+            evaluate = function(self)
+                if (self.target ~= self.value) then
+                    if (math.abs(self.target - self.value) < self.speed) then
+                        self.value = self.target
+                    else
+                        local sign = Mathf.Sign(self.target - self.value)
+                        self.value = self.value + sign * self.speed
+                    end
+                end
+                return self.value
+            end
+        }
+    end
+}
+
+InputReader = {
+    new = function(I)
+        local strafeId = -1
+        local forwardId = -1
+        local subConstructs = I:GetAllSubConstructs()
+        for i = 1, #subConstructs do
+            if I:IsSpinBlock(subConstructs[i]) then
+                if I:IsSubConstructOnHull(subConstructs[i]) then
+                    local blockInfo = I:GetSubConstructInfo(subConstructs[i])
+                    if blockInfo.CustomName == "strafer" then
+                        strafeId = blockInfo.SubConstructIdentifier
+                    elseif blockInfo.CustomName == "forwarder" then
+                        forwardId = blockInfo.SubConstructIdentifier
+                    end
+                end
+            end
+        end
+
+        local commands = {
+            forward = {
+                forwardId = forwardId,
+                smoother = Smoother.new(),
+                read = function(self, I)
+                    local drive = I:GetDrive(0)
+                    if drive == 0 then
+                        return InputReader.readSpinner(I, self.forwardId)
+                    else
+                        return drive
+                    end
+                end
+            },
+            yaw = {
+                smoother = Smoother.new(),
+                read = function(self, I)
+                    return I:GetInput(0, 0) - I:GetInput(0, 1)
+                end
+            },
+            strafe = {
+                strafeId = strafeId,
+                smoother = Smoother.new(),
+                read = function(self, I)
+                    return InputReader.readSpinner(I, self.strafeId)
+                end
+            }
+        }
+
+        return {
+            commands = commands,
+            getCommands = function(self, I)
+                return {
+                    forward = self.commands.forward.smoother:update(self.commands.forward:read(I)):evaluate(),
+                    strafe = self.commands.strafe.smoother:update(self.commands.strafe:read(I)):evaluate(),
+                    yaw = self.commands.yaw.smoother:update(self.commands.yaw:read(I)):evaluate(),
+                }
+            end
+        }
+    end,
+    readSpinner = function(I, spinnerId)
+        if spinnerId ~= -1 then
+            local angle = Vector3.SignedAngle(Vector3.forward, I:GetSubConstructInfo(spinnerId).LocalForwards, Vector3.up)
+            return angle / 90
+        end
+        return 0
     end
 }
 
@@ -226,7 +363,7 @@ Gait = {
         new = function(position, yAngle, height, width)
             return {
                 getPoint = function(t)
-                    local groundRatio = 0.8
+                    local groundRatio = 0.7
                     t = (t + groundRatio / 2) % 1
                     local target
                     if (t < groundRatio) then
@@ -245,7 +382,7 @@ Gait = {
                 end
             }
         end,
-        autoconfig = function(I, leg)
+        autoconfig = function(I, leg, angle)
             local position
             if leg.gaitCenter == nil then
                 local legDirection = I:GetSubConstructInfo(leg.segments[1].spinId).LocalPositionRelativeToCom
@@ -258,14 +395,14 @@ Gait = {
             I:Log(string.format("creating walking gait for leg %s, centered at %s with width %f", tostring(leg.position), tostring(position), leg.segments[3].len.z * 1.2))
 
             return Gait.Walking.new(position,
-                    -math.pi / 2, math.max(leg.segments[3].len.z * 0.2, 3), math.sqrt(position.x * position.x + position.z * position.z))
+                    angle, math.max(leg.segments[3].len.z * 0.5, 3), math.sqrt(position.x * position.x + position.z * position.z))
         end
     },
     Turning = {
         new = function(center, radius, radStart, radLength, height)
             return {
                 getPoint = function(t)
-                    local groundRatio = 0.8
+                    local groundRatio = 0.7
                     t = (t + groundRatio / 2) % 1
                     if (t < groundRatio) then
                         -- foot on ground
@@ -287,17 +424,18 @@ Gait = {
         end,
         autoconfig = function(I, leg)
             local spinPosition = I:GetSubConstructInfo(leg.segments[1].spinId).LocalPositionRelativeToCom
+
             local rotCenter
             local rotRadius
             local angleOffset
             if leg.gaitCenter == nil then
                 rotCenter = Vector3(-spinPosition.x, -leg.segments[3].len.z + leg.segments[1].len.y - 2, -spinPosition.z)
                 rotRadius = math.sqrt(spinPosition.x * spinPosition.x + spinPosition.z * spinPosition.z) + leg.segments[1].len.z + leg.segments[2].len.z
-                angleOffset = 2 * math.pi * Vector3.SignedAngle(spinPosition, Vector3.right, Vector3.up) / 360
+                angleOffset = 2 * math.pi * Vector3.SignedAngle(Vector3.ProjectOnPlane(spinPosition, Vector3.up), Vector3.right, Vector3.up) / 360
             else
                 rotCenter = Vector3(-spinPosition.x, leg.gaitCenter.y, -spinPosition.z)
                 rotRadius = Vector3.Distance(rotCenter, leg.gaitCenter)
-                angleOffset = 2 * math.pi * Vector3.SignedAngle(leg.gaitCenter, Vector3.right, Vector3.up) / 360
+                angleOffset = 2 * math.pi * Vector3.SignedAngle(Vector3.ProjectOnPlane(leg.gaitCenter, Vector3.up), Vector3.right, Vector3.up) / 360
             end
 
             I:Log(string.format("creating turning gait for leg %s, rotating around %s with radius %f and direction %f", tostring(leg.position), tostring(rotCenter), rotRadius, angleOffset))
@@ -306,7 +444,7 @@ Gait = {
                     rotRadius,
                     angleOffset + math.pi / 12,
                     -math.pi / 6,
-                    math.max(leg.segments[3].len.z * 0.2, 3)
+                    math.max(leg.segments[3].len.z * 0.5, 3)
             )
         end
     },
@@ -347,11 +485,11 @@ Segment = {
                 if (self.lastUpdate ~= nil and self.lastUpdate ~= t) then
                     local ellapsedTime = (t - self.lastUpdate + 1) % 1
                     rotSpeed = math.min(math.abs((angle - self.lastAngle) / (ellapsedTime)), 30)
-                    I:Log(string.format('spiner %d going from %f to %f in %f seconds, setting speed at %f rad/s', self.spinId, self.lastAngle, angle, ellapsedTime, rotSpeed))
+                    --I:Log(string.format('spiner %d going from %f to %f in %f seconds, setting speed at %f rad/s', self.spinId, self.lastAngle, angle, ellapsedTime, rotSpeed))
                 end
                 self.lastUpdate = t
                 self.lastAngle = angle
-                I:SetSpinBlockContinuousSpeed(self.spinId, rotSpeed)
+                I:SetSpinBlockContinuousSpeed(self.spinId, 30)
                 local angleDeg = 360 * angle / (2 * math.pi)
                 I:SetSpinBlockRotationAngle(self.spinId, self.spinDirection * (angleDeg + self.spinOffset))
             end
@@ -369,7 +507,7 @@ PrefabLegBuilder = {
             if I:IsSpinBlock(id) then
                 if I:IsSubConstructOnHull(id) then
                     local scPos = I:GetSubConstructInfo(id).LocalPositionRelativeToCom
-                    table.insert(scByOrientation, { id = id, ori = Vector3.SignedAngle(Vector3.forward, scPos, Vector3.up) })
+                    table.insert(scByOrientation, { id = id, ori = Vector3.SignedAngle(Vector3.forward, Vector3.ProjectOnPlane(scPos, Vector3.up), Vector3.up) })
                 end
             end
         end
@@ -427,7 +565,8 @@ PrefabLegBuilder = {
             if i < #legTemplate.segments then
                 local scChildren = I:GetAllSubConstructChildren(sc.SubConstructIdentifier)
                 if (#scChildren ~= 1) then
-                    error('not a leg')
+                    I:Log("not a leg, keeping searching")
+                    return nil
                 else
                     sc = I:GetSubConstructInfo(scChildren[1])
                 end
@@ -441,6 +580,10 @@ IkLib = {
     move3SegmentsLeg = function(leg, I, target, t)
         if target.magnitude > leg.length then
             I:LogToHud(string.format("ERROR : target %s is too far for leg %s !", tostring(target), leg.segments[1].spinId))
+        end
+
+        if target.magnitude < leg.segments[1].len.z then
+            I:LogToHud(string.format("ERROR : target %s is too close for leg %s !", tostring(target), leg.segments[1].spinId))
         end
 
         local a0 = (target.z > 0 and -1 or 1) * math.acos(target.x / math.sqrt(target.x * target.x + target.z * target.z))
